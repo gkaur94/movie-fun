@@ -24,21 +24,15 @@ public class HomeController {
     private final AlbumsBean albumsBean;
     private final MovieFixtures movieFixtures;
     private final AlbumFixtures albumFixtures;
-    private final PlatformTransactionManager moviesTransactionManager;
-    private final PlatformTransactionManager albumsTransactionManager;
 
     public HomeController(MoviesBean moviesBean,
                           AlbumsBean albumsBean,
                           MovieFixtures movieFixtures,
-                          AlbumFixtures albumFixtures,
-                          @Qualifier("moviesTransactionManager") PlatformTransactionManager moviesTransactionManager,
-                          @Qualifier("albumsTransactionManager") PlatformTransactionManager albumsTransactionManager) {
+                          AlbumFixtures albumFixtures) {
         this.moviesBean = moviesBean;
         this.albumsBean = albumsBean;
         this.movieFixtures = movieFixtures;
         this.albumFixtures = albumFixtures;
-        this.moviesTransactionManager = moviesTransactionManager;
-        this.albumsTransactionManager = albumsTransactionManager;
     }
 
     @GetMapping("/")
@@ -48,25 +42,14 @@ public class HomeController {
 
     @GetMapping("/setup")
     public String setup(Map<String, Object> model) {
-        TransactionTemplate moviesTransactionTemplate = new TransactionTemplate(moviesTransactionManager);
-        moviesTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                for (Movie movie : movieFixtures.load()) {
-                    moviesBean.addMovie(movie);
-                }
-            }
-        });
+        for (Movie movie : movieFixtures.load()) {
+            moviesBean.addMovie(movie);
+        }
 
-        TransactionTemplate albumsTransactionTemplate = new TransactionTemplate(albumsTransactionManager);
-        albumsTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                for (Album album : albumFixtures.load()) {
-                    albumsBean.addAlbum(album);
-                }
-            }
-        });
+        for (Album album : albumFixtures.load()) {
+            albumsBean.addAlbum(album);
+        }
+
 
         model.put("movies", moviesBean.getMovies());
         model.put("albums", albumsBean.getAlbums());
